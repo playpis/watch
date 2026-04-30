@@ -3,8 +3,9 @@ export default async function handler(req, res) {
   let btc = "--", btc_change = 0;
   let gold = "--", gold_change = 0;
   let dxy = "--";
-  let us10y = "--";
+  let tlt = "--";
 
+  // BTC + XAUT
   try {
     const r = await fetch(
       "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,tether-gold&vs_currencies=usd&include_24hr_change=true"
@@ -18,6 +19,7 @@ export default async function handler(req, res) {
     gold_change = j["tether-gold"]?.usd_24h_change ?? 0;
   } catch {}
 
+  // DXY（Stooq）
   try {
     const r = await fetch(
       "https://stooq.com/q/l/?s=dx.f&f=sd2t2ohlc&h&e=json"
@@ -26,12 +28,13 @@ export default async function handler(req, res) {
     dxy = j?.symbols?.[0]?.close ?? "--";
   } catch {}
 
+  // TLT（替代 US10Y）
   try {
     const r = await fetch(
       "https://stooq.com/q/l/?s=tlt.us&f=sd2t2ohlc&h&e=json"
     );
     const j = await r.json();
-    us10y = j?.symbols?.[0]?.close ?? "--";
+    tlt = j?.symbols?.[0]?.close ?? "--";
   } catch {}
 
   res.status(200).json({
@@ -40,6 +43,6 @@ export default async function handler(req, res) {
     gold,
     gold_change,
     dxy,
-    us10y
+    tlt
   });
 }

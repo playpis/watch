@@ -5,7 +5,7 @@ export default async function handler(req, res) {
   let dxy = "--";
   let tlt = "--";
 
-  // BTC + XAUT
+  // BTC + XAUT（CoinGecko）
   try {
     const r = await fetch(
       "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,tether-gold&vs_currencies=usd&include_24hr_change=true"
@@ -28,7 +28,7 @@ export default async function handler(req, res) {
     dxy = j?.symbols?.[0]?.close ?? "--";
   } catch {}
 
-  // TLT（替代 US10Y）
+  // TLT（利率替代）
   try {
     const r = await fetch(
       "https://stooq.com/q/l/?s=tlt.us&f=sd2t2ohlc&h&e=json"

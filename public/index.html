@@ -113,15 +113,15 @@ function setSignal(btcChg, dxyChg, tltChg) {
 
   let score = 0;
 
-  // BTC上涨 → 风险偏好增强
+  // BTC上涨 = 风险偏好增强
   if (btcChg > 0) score++;
   else score--;
 
-  // DXY下跌 → 风险偏好增强
+  // DXY下跌 = 风险偏好增强
   if (dxyChg < 0) score++;
   else score--;
 
-  // TLT上涨 → 利率压力下降 → 风险偏好增强
+  // TLT上涨 = 利率下降 = 风险偏好增强
   if (tltChg > 0) score++;
   else score--;
 
@@ -172,26 +172,29 @@ async function load() {
     document.getElementById("gold-change").style.color =
       goldChg >= 0 ? "#00ff88" : "#ff4d4f";
 
-    // DXY
+    // DXY（真实趋势）
     document.getElementById("dxy").innerText =
       d.dxy;
 
     document.getElementById("dxy-change").innerText =
+      "1D Trend: " +
       (dxyChg >= 0 ? "+" : "") +
       dxyChg.toFixed(2);
 
+    // DXY上涨 = 偏空 → 红
     document.getElementById("dxy-change").style.color =
       dxyChg >= 0 ? "#ff4d4f" : "#00ff88";
-      // DXY上涨通常偏风险-off，所以颜色反过来更合理
 
-    // TLT
+    // TLT（真实趋势）
     document.getElementById("tlt").innerText =
       d.tlt;
 
     document.getElementById("tlt-change").innerText =
+      "1D Trend: " +
       (tltChg >= 0 ? "+" : "") +
       tltChg.toFixed(2);
 
+    // TLT上涨 = 偏多 → 绿
     document.getElementById("tlt-change").style.color =
       tltChg >= 0 ? "#00ff88" : "#ff4d4f";
 
@@ -204,7 +207,8 @@ async function load() {
 
   } catch (e) {
     document.getElementById("signal").innerText = "ERROR";
-    document.getElementById("signal-desc").innerText = "data fetch failed";
+    document.getElementById("signal-desc").innerText =
+      "data fetch failed";
   }
 }
 

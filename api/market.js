@@ -1,31 +1,34 @@
 export default async function handler(req, res) {
   try {
-    // BTC + XAUT（CoinGecko）
+    // BTC + XAUT
     const cryptoRes = await fetch(
       "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,tether-gold&vs_currencies=usd&include_24hr_change=true"
     );
     const crypto = await cryptoRes.json();
 
-    // DXY（Stooq：美元指数期货 DX）
+    // DXY（Stooq）
     let dxy = "--";
     try {
-      const dxyRes = await fetch(
+      const r = await fetch(
         "https://stooq.com/q/l/?s=dx.f&f=sd2t2ohlc&h&e=json"
       );
-      const dxyJson = await dxyRes.json();
-      dxy = dxyJson?.symbols?.[0]?.close ?? "--";
-    } catch {
-      dxy = "--";
-    }
+      const j = await r.json();
+      dxy = j?.symbols?.[0]?.close ?? "--";
+    } catch {}
 
-    // US10Y（Stooq：10年美债 TNX）
+    // US10Y（稳定 CSV 方案）
     let us10y = "--";
     try {
-      const us10yRes = await fetch(
-        "https://stooq.com/q/l/?s=tnx.f&f=sd2t2ohlc&h&e=json"
+      const r = await fetch(
+        "https://api.allorigins.win/raw?url=https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10"
       );
-      const us10yJson = await us10yRes.json();
-      us10y = us10yJson?.symbols?.[0]?.close ?? "--";
+      const text = await r.text();
+
+      const lines = text.trim().split("\n");
+      const last = lines[lines.length - 1];
+      const value = last.split(",")[1];
+
+      us10y = value || "--";
     } catch {
       us10y = "--";
     }
@@ -41,7 +44,7 @@ export default async function handler(req, res) {
       us10y
     });
 
-  } catch (e) {
+  } catch {
     res.status(500).json({
       btc: "--",
       btc_change: 0,

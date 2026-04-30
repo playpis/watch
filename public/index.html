@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Watch</title>
+  <title>Macro Watch</title>
 
   <style>
     body {
@@ -13,35 +13,54 @@
       font-family: -apple-system;
       display: flex;
       justify-content: center;
-      padding: 12px;
+      padding: 20px 0;
     }
 
     .container {
-      width: 100%;
+      width: 92%;
       max-width: 360px;
+    }
+
+    .title {
+      text-align: center;
+      font-size: 18px;
+      margin-bottom: 16px;
+      color: #ddd;
     }
 
     .card {
       background: #111;
-      border-radius: 14px;
-      padding: 12px;
-      margin-bottom: 8px;
+      border-radius: 16px;
+      padding: 14px;
+      margin-bottom: 10px;
     }
 
-    .text {
-      font-size: 18px;
-      font-weight: 600;
-      white-space: nowrap;
+    .label {
+      font-size: 11px;
+      color: #888;
     }
 
-    .signal {
-      font-size: 18px;
-      font-weight: 700;
+    .value {
+      font-size: 26px;
+      font-weight: bold;
+      margin-top: 4px;
+    }
+
+    .sub {
+      font-size: 12px;
+      margin-top: 4px;
+      color: #aaa;
+      min-height: 16px; /* ⭐关键：防止Watch塌陷 */
     }
 
     .green { color: #00ff88; }
     .red { color: #ff4d4f; }
     .gray { color: #aaa; }
+
+    .signal {
+      font-size: 18px;
+      font-weight: bold;
+    }
   </style>
 </head>
 
@@ -49,24 +68,39 @@
 
 <div class="container">
 
+  <div class="title">📊 Macro Watch</div>
+
+  <!-- SIGNAL -->
   <div class="card">
-    <div class="signal" id="signal">Loading...</div>
+    <div class="label">Signal</div>
+    <div class="signal" id="signal">--</div>
+    <div class="sub" id="signal-desc">loading...</div>
   </div>
 
+  <!-- BTC -->
   <div class="card">
-    <div class="text" id="btc">BTC --</div>
+    <div class="label">BTC</div>
+    <div class="value" id="btc">$--</div>
+    <div class="sub" id="btc-change"></div>
   </div>
 
+  <!-- XAUT -->
   <div class="card">
-    <div class="text" id="gold">XAUT --</div>
+    <div class="label">XAUT</div>
+    <div class="value" id="gold">$--</div>
+    <div class="sub" id="gold-change"></div>
   </div>
 
+  <!-- DXY -->
   <div class="card">
-    <div class="text" id="dxy">DXY --</div>
+    <div class="label">DXY</div>
+    <div class="value" id="dxy">--</div>
   </div>
 
+  <!-- TLT -->
   <div class="card">
-    <div class="text" id="tlt">TLT --</div>
+    <div class="label">TLT</div>
+    <div class="value" id="tlt">--</div>
   </div>
 
 </div>
@@ -74,27 +108,31 @@
 <script>
 function setSignal(btcChg, dxy, tlt) {
   const el = document.getElementById("signal");
+  const desc = document.getElementById("signal-desc");
 
   let score = 0;
 
   if (btcChg > 0) score++;
   else score--;
 
-  if (dxy < 100) score++;
+  if (Number(dxy) < 100) score++;
   else score--;
 
-  if (tlt > 0) score++;
+  if (Number(tlt) > 0) score++;
   else score--;
 
   if (score >= 2) {
-    el.innerText = "🟢 RISK-ON";
+    el.innerText = "🟢 Risk-On";
     el.className = "signal green";
+    desc.innerText = "Risk assets favored";
   } else if (score <= -2) {
-    el.innerText = "🔴 RISK-OFF";
+    el.innerText = "🔴 Risk-Off";
     el.className = "signal red";
+    desc.innerText = "Defensive mode";
   } else {
-    el.innerText = "⚪ NEUTRAL";
+    el.innerText = "⚪ Neutral";
     el.className = "signal gray";
+    desc.innerText = "No clear trend";
   }
 }
 
@@ -106,25 +144,29 @@ async function load() {
     const btcChg = Number(d.btc_change || 0);
     const goldChg = Number(d.gold_change || 0);
 
-    document.getElementById("btc").innerText =
-      `BTC $${d.btc} ${btcChg.toFixed(2)}%`;
+    // BTC
+    document.getElementById("btc").innerText = "$" + d.btc;
+    document.getElementById("btc-change").innerText =
+      (btcChg >= 0 ? "+" : "") + btcChg.toFixed(2) + "% (24h)";
+    document.getElementById("btc-change").className =
+      "sub " + (btcChg >= 0 ? "green" : "red");
 
-    document.getElementById("gold").innerText =
-      `XAUT $${d.gold} ${goldChg.toFixed(2)}%`;
+    // XAUT
+    document.getElementById("gold").innerText = "$" + d.gold;
+    document.getElementById("gold-change").innerText =
+      (goldChg >= 0 ? "+" : "") + goldChg.toFixed(2) + "% (24h)";
+    document.getElementById("gold-change").className =
+      "sub " + (goldChg >= 0 ? "green" : "red");
 
-    document.getElementById("dxy").innerText =
-      `DXY ${d.dxy}`;
+    // DXY
+    document.getElementById("dxy").innerText = d.dxy;
 
-    document.getElementById("tlt").innerText =
-      `TLT ${d.tlt}`;
+    // TLT
+    document.getElementById("tlt").innerText = d.tlt;
 
-    setSignal(
-      btcChg,
-      Number(d.dxy),
-      Number(d.tlt)
-    );
+    setSignal(btcChg, d.dxy, d.tlt);
 
-  } catch {
+  } catch (e) {
     document.getElementById("signal").innerText = "ERROR";
   }
 }

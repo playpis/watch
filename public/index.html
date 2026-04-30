@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Macro Watch</title>
+  <title>Watch</title>
 
   <style>
     body {
@@ -17,46 +17,42 @@
     }
 
     .container {
-      width: 90%;
+      width: 92%;
       max-width: 360px;
-    }
-
-    .title {
-      text-align: center;
-      font-size: 18px;
-      margin-bottom: 16px;
-      color: #ddd;
     }
 
     .card {
       background: #111;
       border-radius: 16px;
-      padding: 16px;
-      margin-bottom: 12px;
+      padding: 14px;
+      margin-bottom: 10px;
     }
 
     .label {
-      font-size: 12px;
-      color: #999;
+      font-size: 11px;
+      color: #888;
     }
 
     .value {
-      font-size: 28px;
+      font-size: 26px;
+      font-weight: bold;
+      margin-top: 4px;
+    }
+
+    .signal {
+      font-size: 18px;
       font-weight: bold;
       margin-top: 6px;
     }
+
+    .green { color: #00ff88; }
+    .red { color: #ff4d4f; }
+    .gray { color: #aaa; }
 
     .sub {
       font-size: 12px;
       color: #666;
       margin-top: 4px;
-    }
-
-    .footer {
-      text-align: center;
-      font-size: 11px;
-      color: #666;
-      margin-top: 10px;
     }
   </style>
 </head>
@@ -65,65 +61,90 @@
 
 <div class="container">
 
-  <div class="title">📊 Macro Watch</div>
+  <!-- SIGNAL -->
+  <div class="card">
+    <div class="label">Signal</div>
+    <div class="signal" id="signal">--</div>
+    <div class="sub" id="signal-desc">loading...</div>
+  </div>
 
+  <!-- BTC -->
   <div class="card">
     <div class="label">BTC</div>
     <div class="value" id="btc">$--</div>
     <div class="sub" id="btc-change">--</div>
   </div>
 
+  <!-- GOLD -->
   <div class="card">
-    <div class="label">XAUT (Gold Token)</div>
+    <div class="label">XAUT</div>
     <div class="value" id="gold">$--</div>
     <div class="sub" id="gold-change">--</div>
   </div>
 
+  <!-- DXY -->
   <div class="card">
-    <div class="label">DXY (UUP Proxy)</div>
+    <div class="label">DXY</div>
     <div class="value" id="dxy">--</div>
   </div>
 
+  <!-- TLT -->
   <div class="card">
-    <div class="label">US10Y Yield</div>
-    <div class="value" id="us10y">--%</div>
+    <div class="label">TLT (Rate Proxy)</div>
+    <div class="value" id="tlt">--</div>
   </div>
-
-  <div class="footer" id="time">Loading...</div>
 
 </div>
 
 <script>
-function setChange(id, val) {
-  const el = document.getElementById(id);
-  const n = Number(val || 0);
-  const sign = n >= 0 ? "+" : "";
-  el.innerText = `${sign}${n.toFixed(2)}% (24h)`;
-}
+function setSignal(btc, dxy, tlt) {
+  const el = document.getElementById("signal");
+  const desc = document.getElementById("signal-desc");
 
-async function loadData() {
-  try {
-    const res = await fetch("/api/market");
-    const data = await res.json();
+  let score = 0;
 
-    document.getElementById("btc").innerText = "$" + data.btc;
-    document.getElementById("gold").innerText = "$" + data.gold;
-    document.getElementById("dxy").innerText = data.dxy;
-    document.getElementById("us10y").innerText = data.us10y;
+  if (btc > 0) score += 1;
+  else score -= 1;
 
-    setChange("btc-change", data.btc_change);
-    setChange("gold-change", data.gold_change);
+  if (dxy < 0) score += 1;
+  else score -= 1;
 
-    document.getElementById("time").innerText =
-      "Updated: " + new Date().toLocaleTimeString();
+  if (tlt > 0) score += 1;
+  else score -= 1;
 
-  } catch (e) {
-    document.getElementById("time").innerText = "Update failed";
+  if (score >= 2) {
+    el.innerText = "🟢 Risk-On";
+    el.className = "signal green";
+    desc.innerText = "Risk assets favored";
+  } else if (score <= -2) {
+    el.innerText = "🔴 Risk-Off";
+    el.className = "signal red";
+    desc.innerText = "Defensive mode";
+  } else {
+    el.innerText = "⚪ Neutral";
+    el.className = "signal gray";
+    desc.innerText = "No clear trend";
   }
 }
 
-loadData();
-setInterval(loadData, 300000);
+async function load() {
+  const r = await fetch("/api/market");
+  const d = await r.json();
+
+  document.getElementById("btc").innerText = "$" + d.btc;
+  document.getElementById("gold").innerText = "$" + d.gold;
+  document.getElementById("dxy").innerText = d.dxy;
+  document.getElementById("tlt").innerText = d.us10y;
+
+  setSignal(
+    d.btc_change,
+    -Number(d.dxy),     // DXY反向
+    Number(d.us10y)     // TLT
+  );
+}
+
+load();
+setInterval(load, 300000);
 </script>
 
 </body>

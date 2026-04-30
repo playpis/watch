@@ -1,28 +1,26 @@
 export default async function handler(req, res) {
   try {
-    // BTC + XAUT（CoinGecko，无 key）
+    // BTC + XAUT
     const cryptoRes = await fetch(
       "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,tether-gold&vs_currencies=usd&include_24hr_change=true"
     );
     const crypto = await cryptoRes.json();
 
-    // DXY（UUP ETF 近似）
+    // DXY（Stooq 美元指数期货 DX）
     const dxyRes = await fetch(
-      "https://query1.finance.yahoo.com/v7/finance/quote?symbols=UUP"
+      "https://stooq.com/q/l/?s=dx.f&f=sd2t2ohlc&h&e=json"
     );
     const dxyJson = await dxyRes.json();
 
-    const dxy =
-      dxyJson.quoteResponse?.result?.[0]?.regularMarketPrice ?? "--";
+    const dxy = dxyJson?.symbols?.[0]?.close ?? "--";
 
-    // US10Y（用公开 FRED 代理源）
+    // US10Y（Stooq 美债收益率 TNX）
     const us10yRes = await fetch(
-      "https://api.stlouisfed.org/fred/series/observations?series_id=DGS10&api_key=demo&file_type=json"
+      "https://stooq.com/q/l/?s=tnx.f&f=sd2t2ohlc&h&e=json"
     );
-
     const us10yJson = await us10yRes.json();
 
-    const latest = us10yJson.observations?.slice(-1)[0]?.value ?? "--";
+    const us10y = us10yJson?.symbols?.[0]?.close ?? "--";
 
     res.status(200).json({
       btc: crypto.bitcoin?.usd ?? "--",
@@ -32,7 +30,7 @@ export default async function handler(req, res) {
       gold_change: crypto["tether-gold"]?.usd_24h_change ?? 0,
 
       dxy,
-      us10y: latest
+      us10y
     });
 
   } catch (e) {

@@ -13,41 +13,30 @@
       font-family: -apple-system;
       display: flex;
       justify-content: center;
-      padding: 20px 0;
+      padding: 12px;
     }
 
     .container {
-      width: 92%;
+      width: 100%;
       max-width: 360px;
     }
 
     .card {
       background: #111;
-      border-radius: 16px;
-      padding: 14px;
-      margin-bottom: 10px;
+      border-radius: 14px;
+      padding: 12px;
+      margin-bottom: 8px;
     }
 
-    .label {
-      font-size: 11px;
-      color: #888;
-    }
-
-    .value {
-      font-size: 26px;
-      font-weight: bold;
-      margin-top: 4px;
-    }
-
-    .sub {
-      font-size: 12px;
-      margin-top: 4px;
-      color: #aaa;
+    .text {
+      font-size: 18px;
+      font-weight: 600;
+      white-space: nowrap;
     }
 
     .signal {
       font-size: 18px;
-      font-weight: bold;
+      font-weight: 700;
     }
 
     .green { color: #00ff88; }
@@ -60,37 +49,24 @@
 
 <div class="container">
 
-  <!-- SIGNAL -->
   <div class="card">
-    <div class="label">Signal</div>
-    <div class="signal" id="signal">--</div>
-    <div class="sub" id="signal-desc">loading...</div>
+    <div class="signal" id="signal">Loading...</div>
   </div>
 
-  <!-- BTC -->
   <div class="card">
-    <div class="label">BTC</div>
-    <div class="value" id="btc">$--</div>
-    <div class="sub" id="btc-change">--</div>
+    <div class="text" id="btc">BTC --</div>
   </div>
 
-  <!-- XAUT -->
   <div class="card">
-    <div class="label">XAUT</div>
-    <div class="value" id="gold">$--</div>
-    <div class="sub" id="gold-change">--</div>
+    <div class="text" id="gold">XAUT --</div>
   </div>
 
-  <!-- DXY -->
   <div class="card">
-    <div class="label">DXY</div>
-    <div class="value" id="dxy">--</div>
+    <div class="text" id="dxy">DXY --</div>
   </div>
 
-  <!-- TLT -->
   <div class="card">
-    <div class="label">TLT (Rate Proxy)</div>
-    <div class="value" id="tlt">--</div>
+    <div class="text" id="tlt">TLT --</div>
   </div>
 
 </div>
@@ -98,67 +74,59 @@
 <script>
 function setSignal(btcChg, dxy, tlt) {
   const el = document.getElementById("signal");
-  const desc = document.getElementById("signal-desc");
 
   let score = 0;
 
   if (btcChg > 0) score++;
   else score--;
 
-  if (dxy < 100) score++;   // 简化：美元弱=风险偏好
+  if (dxy < 100) score++;
   else score--;
 
   if (tlt > 0) score++;
   else score--;
 
   if (score >= 2) {
-    el.innerText = "🟢 Risk-On";
+    el.innerText = "🟢 RISK-ON";
     el.className = "signal green";
-    desc.innerText = "Risk assets favored";
   } else if (score <= -2) {
-    el.innerText = "🔴 Risk-Off";
+    el.innerText = "🔴 RISK-OFF";
     el.className = "signal red";
-    desc.innerText = "Defensive mode";
   } else {
-    el.innerText = "⚪ Neutral";
+    el.innerText = "⚪ NEUTRAL";
     el.className = "signal gray";
-    desc.innerText = "No clear trend";
   }
 }
 
 async function load() {
-  const r = await fetch("/api/market");
-  const d = await r.json();
+  try {
+    const r = await fetch("/api/market");
+    const d = await r.json();
 
-  // BTC
-  document.getElementById("btc").innerText = "$" + d.btc;
-  const btcChg = Number(d.btc_change || 0);
-  document.getElementById("btc-change").innerText =
-    (btcChg >= 0 ? "+" : "") + btcChg.toFixed(2) + "% (24h)";
+    const btcChg = Number(d.btc_change || 0);
+    const goldChg = Number(d.gold_change || 0);
 
-  document.getElementById("btc-change").style.color =
-    btcChg >= 0 ? "#00ff88" : "#ff4d4f";
+    document.getElementById("btc").innerText =
+      `BTC $${d.btc} ${btcChg.toFixed(2)}%`;
 
-  // XAUT
-  document.getElementById("gold").innerText = "$" + d.gold;
-  const goldChg = Number(d.gold_change || 0);
-  document.getElementById("gold-change").innerText =
-    (goldChg >= 0 ? "+" : "") + goldChg.toFixed(2) + "% (24h)";
+    document.getElementById("gold").innerText =
+      `XAUT $${d.gold} ${goldChg.toFixed(2)}%`;
 
-  document.getElementById("gold-change").style.color =
-    goldChg >= 0 ? "#00ff88" : "#ff4d4f";
+    document.getElementById("dxy").innerText =
+      `DXY ${d.dxy}`;
 
-  // DXY
-  document.getElementById("dxy").innerText = d.dxy;
+    document.getElementById("tlt").innerText =
+      `TLT ${d.tlt}`;
 
-  // TLT
-  document.getElementById("tlt").innerText = d.tlt;
+    setSignal(
+      btcChg,
+      Number(d.dxy),
+      Number(d.tlt)
+    );
 
-  setSignal(
-    btcChg,
-    Number(d.dxy),
-    Number(d.tlt)
-  );
+  } catch {
+    document.getElementById("signal").innerText = "ERROR";
+  }
 }
 
 load();

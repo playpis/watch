@@ -39,21 +39,20 @@
       margin-top: 4px;
     }
 
+    .sub {
+      font-size: 12px;
+      margin-top: 4px;
+      color: #aaa;
+    }
+
     .signal {
       font-size: 18px;
       font-weight: bold;
-      margin-top: 6px;
     }
 
     .green { color: #00ff88; }
     .red { color: #ff4d4f; }
     .gray { color: #aaa; }
-
-    .sub {
-      font-size: 12px;
-      color: #666;
-      margin-top: 4px;
-    }
   </style>
 </head>
 
@@ -75,7 +74,7 @@
     <div class="sub" id="btc-change">--</div>
   </div>
 
-  <!-- GOLD -->
+  <!-- XAUT -->
   <div class="card">
     <div class="label">XAUT</div>
     <div class="value" id="gold">$--</div>
@@ -97,20 +96,20 @@
 </div>
 
 <script>
-function setSignal(btc, dxy, tlt) {
+function setSignal(btcChg, dxy, tlt) {
   const el = document.getElementById("signal");
   const desc = document.getElementById("signal-desc");
 
   let score = 0;
 
-  if (btc > 0) score += 1;
-  else score -= 1;
+  if (btcChg > 0) score++;
+  else score--;
 
-  if (dxy < 0) score += 1;
-  else score -= 1;
+  if (dxy < 100) score++;   // 简化：美元弱=风险偏好
+  else score--;
 
-  if (tlt > 0) score += 1;
-  else score -= 1;
+  if (tlt > 0) score++;
+  else score--;
 
   if (score >= 2) {
     el.innerText = "🟢 Risk-On";
@@ -131,15 +130,34 @@ async function load() {
   const r = await fetch("/api/market");
   const d = await r.json();
 
+  // BTC
   document.getElementById("btc").innerText = "$" + d.btc;
+  const btcChg = Number(d.btc_change || 0);
+  document.getElementById("btc-change").innerText =
+    (btcChg >= 0 ? "+" : "") + btcChg.toFixed(2) + "% (24h)";
+
+  document.getElementById("btc-change").style.color =
+    btcChg >= 0 ? "#00ff88" : "#ff4d4f";
+
+  // XAUT
   document.getElementById("gold").innerText = "$" + d.gold;
+  const goldChg = Number(d.gold_change || 0);
+  document.getElementById("gold-change").innerText =
+    (goldChg >= 0 ? "+" : "") + goldChg.toFixed(2) + "% (24h)";
+
+  document.getElementById("gold-change").style.color =
+    goldChg >= 0 ? "#00ff88" : "#ff4d4f";
+
+  // DXY
   document.getElementById("dxy").innerText = d.dxy;
-  document.getElementById("tlt").innerText = d.us10y;
+
+  // TLT
+  document.getElementById("tlt").innerText = d.tlt;
 
   setSignal(
-    d.btc_change,
-    -Number(d.dxy),     // DXY反向
-    Number(d.us10y)     // TLT
+    btcChg,
+    Number(d.dxy),
+    Number(d.tlt)
   );
 }
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Macro Watch</title>
+  <title>Watch</title>
 
   <style>
     body {
@@ -13,19 +13,12 @@
       font-family: -apple-system;
       display: flex;
       justify-content: center;
-      padding: 20px 0;
+      padding: 18px 0;
     }
 
     .container {
       width: 92%;
       max-width: 360px;
-    }
-
-    .title {
-      text-align: center;
-      font-size: 18px;
-      margin-bottom: 16px;
-      color: #ddd;
     }
 
     .card {
@@ -38,37 +31,35 @@
     .label {
       font-size: 11px;
       color: #888;
+      margin-bottom: 4px;
     }
 
     .value {
       font-size: 26px;
       font-weight: bold;
-      margin-top: 4px;
     }
 
     .sub {
       font-size: 12px;
       margin-top: 4px;
       color: #aaa;
-      min-height: 16px; /* ⭐关键：防止Watch塌陷 */
+      min-height: 14px;
+    }
+
+    .signal {
+      font-size: 18px;
+      font-weight: 700;
     }
 
     .green { color: #00ff88; }
     .red { color: #ff4d4f; }
     .gray { color: #aaa; }
-
-    .signal {
-      font-size: 18px;
-      font-weight: bold;
-    }
   </style>
 </head>
 
 <body>
 
 <div class="container">
-
-  <div class="title">📊 Macro Watch</div>
 
   <!-- SIGNAL -->
   <div class="card">
@@ -148,15 +139,15 @@ async function load() {
     document.getElementById("btc").innerText = "$" + d.btc;
     document.getElementById("btc-change").innerText =
       (btcChg >= 0 ? "+" : "") + btcChg.toFixed(2) + "% (24h)";
-    document.getElementById("btc-change").className =
-      "sub " + (btcChg >= 0 ? "green" : "red");
+    document.getElementById("btc-change").style.color =
+      btcChg >= 0 ? "#00ff88" : "#ff4d4f";
 
     // XAUT
     document.getElementById("gold").innerText = "$" + d.gold;
     document.getElementById("gold-change").innerText =
       (goldChg >= 0 ? "+" : "") + goldChg.toFixed(2) + "% (24h)";
-    document.getElementById("gold-change").className =
-      "sub " + (goldChg >= 0 ? "green" : "red");
+    document.getElementById("gold-change").style.color =
+      goldChg >= 0 ? "#00ff88" : "#ff4d4f";
 
     // DXY
     document.getElementById("dxy").innerText = d.dxy;

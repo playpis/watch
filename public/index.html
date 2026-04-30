@@ -42,8 +42,8 @@
     .sub {
       font-size: 12px;
       margin-top: 4px;
-      color: #aaa;
       min-height: 14px;
+      color: #aaa;
     }
 
     .signal {
@@ -51,9 +51,17 @@
       font-weight: 700;
     }
 
-    .green { color: #00ff88; }
-    .red { color: #ff4d4f; }
-    .gray { color: #aaa; }
+    .green {
+      color: #00ff88;
+    }
+
+    .red {
+      color: #ff4d4f;
+    }
+
+    .gray {
+      color: #aaa;
+    }
   </style>
 </head>
 
@@ -86,30 +94,35 @@
   <div class="card">
     <div class="label">DXY</div>
     <div class="value" id="dxy">--</div>
+    <div class="sub" id="dxy-change"></div>
   </div>
 
   <!-- TLT -->
   <div class="card">
     <div class="label">TLT</div>
     <div class="value" id="tlt">--</div>
+    <div class="sub" id="tlt-change"></div>
   </div>
 
 </div>
 
 <script>
-function setSignal(btcChg, dxy, tlt) {
+function setSignal(btcChg, dxyChg, tltChg) {
   const el = document.getElementById("signal");
   const desc = document.getElementById("signal-desc");
 
   let score = 0;
 
+  // BTC上涨 → 风险偏好增强
   if (btcChg > 0) score++;
   else score--;
 
-  if (Number(dxy) < 100) score++;
+  // DXY下跌 → 风险偏好增强
+  if (dxyChg < 0) score++;
   else score--;
 
-  if (Number(tlt) > 0) score++;
+  // TLT上涨 → 利率压力下降 → 风险偏好增强
+  if (tltChg > 0) score++;
   else score--;
 
   if (score >= 2) {
@@ -134,31 +147,64 @@ async function load() {
 
     const btcChg = Number(d.btc_change || 0);
     const goldChg = Number(d.gold_change || 0);
+    const dxyChg = Number(d.dxy_change || 0);
+    const tltChg = Number(d.tlt_change || 0);
 
     // BTC
-    document.getElementById("btc").innerText = "$" + d.btc;
+    document.getElementById("btc").innerText =
+      "$" + d.btc;
+
     document.getElementById("btc-change").innerText =
-      (btcChg >= 0 ? "+" : "") + btcChg.toFixed(2) + "% (24h)";
+      (btcChg >= 0 ? "+" : "") +
+      btcChg.toFixed(2) + "% (24h)";
+
     document.getElementById("btc-change").style.color =
       btcChg >= 0 ? "#00ff88" : "#ff4d4f";
 
     // XAUT
-    document.getElementById("gold").innerText = "$" + d.gold;
+    document.getElementById("gold").innerText =
+      "$" + d.gold;
+
     document.getElementById("gold-change").innerText =
-      (goldChg >= 0 ? "+" : "") + goldChg.toFixed(2) + "% (24h)";
+      (goldChg >= 0 ? "+" : "") +
+      goldChg.toFixed(2) + "% (24h)";
+
     document.getElementById("gold-change").style.color =
       goldChg >= 0 ? "#00ff88" : "#ff4d4f";
 
     // DXY
-    document.getElementById("dxy").innerText = d.dxy;
+    document.getElementById("dxy").innerText =
+      d.dxy;
+
+    document.getElementById("dxy-change").innerText =
+      (dxyChg >= 0 ? "+" : "") +
+      dxyChg.toFixed(2);
+
+    document.getElementById("dxy-change").style.color =
+      dxyChg >= 0 ? "#ff4d4f" : "#00ff88";
+      // DXY上涨通常偏风险-off，所以颜色反过来更合理
 
     // TLT
-    document.getElementById("tlt").innerText = d.tlt;
+    document.getElementById("tlt").innerText =
+      d.tlt;
 
-    setSignal(btcChg, d.dxy, d.tlt);
+    document.getElementById("tlt-change").innerText =
+      (tltChg >= 0 ? "+" : "") +
+      tltChg.toFixed(2);
+
+    document.getElementById("tlt-change").style.color =
+      tltChg >= 0 ? "#00ff88" : "#ff4d4f";
+
+    // SIGNAL
+    setSignal(
+      btcChg,
+      dxyChg,
+      tltChg
+    );
 
   } catch (e) {
     document.getElementById("signal").innerText = "ERROR";
+    document.getElementById("signal-desc").innerText = "data fetch failed";
   }
 }
 

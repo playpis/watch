@@ -6,17 +6,11 @@ export default async function handler(req, res) {
   let dxy = "--", dxy_change = 0;
   let tlt = "--", tlt_change = 0;
 
-  /*
-    =========================
-    BTC + XAUT（CoinGecko）
-    使用真实24h涨跌幅（官方提供）
-    =========================
-  */
+  // BTC + XAUT
   try {
     const r = await fetch(
       "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,tether-gold&vs_currencies=usd&include_24hr_change=true"
     );
-
     const j = await r.json();
 
     btc = j.bitcoin?.usd ?? "--";
@@ -24,97 +18,57 @@ export default async function handler(req, res) {
 
     gold = j["tether-gold"]?.usd ?? "--";
     gold_change = j["tether-gold"]?.usd_24h_change ?? 0;
+  } catch {}
 
-  } catch (e) {}
-
-  /*
-    =========================
-    DXY（真实趋势）
-    使用：
-    today_close - yesterday_close
-    而不是：
-    today_close - today_open
-    =========================
-  */
-
+  // ===== DXY（真正稳定版）=====
   try {
     const r = await fetch(
-      "https://stooq.com/q/l/?s=dx.f&f=sd2t2ohlc&h&e=json"
+      "https://stooq.com/q/d/l/?s=dx.f&i=d"
     );
+    const text = await r.text();
 
-    const j = await r.json();
-    const item = j?.symbols?.[0];
+    const lines = text.trim().split("\n");
 
-    dxy = item?.close ?? "--";
+    if (lines.length >= 3) {
+      const today = lines[lines.length - 1].split(",");
+      const yesterday = lines[lines.length - 2].split(",");
 
-    /*
-      stooq 有时返回：
-      close + previous close（close yesterday）
+      const todayClose = Number(today[4]);
+      const yesterdayClose = Number(yesterday[4]);
 
-      如果没有 previous 字段，
-      fallback 用 open（次优方案）
-    */
-
-    const prev =
-      item?.prev ??
-      item?.previous ??
-      item?.close_prev ??
-      item?.open;
-
-    if (item?.close && prev) {
-      dxy_change =
-        Number(item.close) - Number(prev);
+      dxy = todayClose;
+      dxy_change = todayClose - yesterdayClose;
     }
+  } catch {}
 
-  } catch (e) {}
-
-  /*
-    =========================
-    TLT（真实趋势）
-    同样使用：
-    today_close - yesterday_close
-    =========================
-  */
-
+  // ===== TLT（真正稳定版）=====
   try {
     const r = await fetch(
-      "https://stooq.com/q/l/?s=tlt.us&f=sd2t2ohlc&h&e=json"
+      "https://stooq.com/q/d/l/?s=tlt.us&i=d"
     );
+    const text = await r.text();
 
-    const j = await r.json();
-    const item = j?.symbols?.[0];
+    const lines = text.trim().split("\n");
 
-    tlt = item?.close ?? "--";
+    if (lines.length >= 3) {
+      const today = lines[lines.length - 1].split(",");
+      const yesterday = lines[lines.length - 2].split(",");
 
-    const prev =
-      item?.prev ??
-      item?.previous ??
-      item?.close_prev ??
-      item?.open;
+      const todayClose = Number(today[4]);
+      const yesterdayClose = Number(yesterday[4]);
 
-    if (item?.close && prev) {
-      tlt_change =
-        Number(item.close) - Number(prev);
+      tlt = todayClose;
+      tlt_change = todayClose - yesterdayClose;
     }
-
-  } catch (e) {}
-
-  /*
-    =========================
-    返回最终数据
-    =========================
-  */
+  } catch {}
 
   res.status(200).json({
     btc,
     btc_change,
-
     gold,
     gold_change,
-
     dxy,
     dxy_change,
-
     tlt,
     tlt_change
   });

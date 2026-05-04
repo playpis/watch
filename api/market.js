@@ -20,7 +20,7 @@ export default async function handler(req, res) {
     gold_change = j["tether-gold"]?.usd_24h_change ?? 0;
   } catch {}
 
-  // ===== DXY（真正稳定版）=====
+  // ===== DXY =====
   try {
     const r = await fetch(
       "https://stooq.com/q/d/l/?s=dx.f&i=d"
@@ -29,19 +29,22 @@ export default async function handler(req, res) {
 
     const lines = text.trim().split("\n");
 
+    // ⭐ 正确：最新在上面
     if (lines.length >= 3) {
-      const today = lines[lines.length - 1].split(",");
-      const yesterday = lines[lines.length - 2].split(",");
+      const today = lines[1].split(",");
+      const yesterday = lines[2].split(",");
 
       const todayClose = Number(today[4]);
       const yesterdayClose = Number(yesterday[4]);
 
-      dxy = todayClose;
-      dxy_change = todayClose - yesterdayClose;
+      if (!isNaN(todayClose) && !isNaN(yesterdayClose)) {
+        dxy = todayClose;
+        dxy_change = todayClose - yesterdayClose;
+      }
     }
   } catch {}
 
-  // ===== TLT（真正稳定版）=====
+  // ===== TLT =====
   try {
     const r = await fetch(
       "https://stooq.com/q/d/l/?s=tlt.us&i=d"
@@ -51,14 +54,16 @@ export default async function handler(req, res) {
     const lines = text.trim().split("\n");
 
     if (lines.length >= 3) {
-      const today = lines[lines.length - 1].split(",");
-      const yesterday = lines[lines.length - 2].split(",");
+      const today = lines[1].split(",");
+      const yesterday = lines[2].split(",");
 
       const todayClose = Number(today[4]);
       const yesterdayClose = Number(yesterday[4]);
 
-      tlt = todayClose;
-      tlt_change = todayClose - yesterdayClose;
+      if (!isNaN(todayClose) && !isNaN(yesterdayClose)) {
+        tlt = todayClose;
+        tlt_change = todayClose - yesterdayClose;
+      }
     }
   } catch {}
 
